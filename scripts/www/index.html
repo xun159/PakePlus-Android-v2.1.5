@@ -1,11 +1,535 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+
+<head>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon-192.png" sizes="192x192">
+    <link rel="icon" href="favicon-512.png" sizes="512x512">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#e74c3c">
+    <title>🍅 番茄钟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .tomato-box {
+            width: 90%;
+            max-width: 420px;
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid #e0e0e0;
+        }
+
+        .title {
+            color: #e74c3c;
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .progress {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 25px;
+            position: relative;
+        }
+
+        .progress-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #f8f9fa;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#e74c3c 0%, #f8f9fa 0%);
+            clip-path: circle(50% at center);
+            transition: transform 0.1s linear;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            z-index: 2;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .status {
+            font-size: 18px;
+            margin: 15px 0;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .round {
+            font-size: 16px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        /* 设置区域 */
+        .settings-toggle {
+            color: #e74c3c;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            text-decoration: underline;
+        }
+
+        .settings {
+            background: #fdfdfd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.7, 1);
+            min-width: 80px;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-start {
+            background: #e74c3c;
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-pause {
+            background: #f39c12;
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-reset {
+            background: #95a5a6;
+            color: #fff;
+            padding: 10px 18px;
+            font-size: 14px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 400px) {
+            .tomato-box {
+                padding: 20px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="tomato-box">
+        <h1 class="title">番茄钟</h1>
+
+        <!-- 时间显示 -->
+        <div class="progress">
+            <div class="progress-circle">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="timeText">25:00</div>
+        </div>
+
+        <!-- 状态信息 -->
+        <div class="status" id="status">就绪 - 工作模式</div>
+        <div class="round" id="round">当前轮次：0/4</div>
+
+        <!-- 设置开关 -->
+        <div class="settings-toggle" id="toggleSettings">⚙️ 修改设置</div>
+
+        <!-- 设置面板 -->
+        <div class="settings hidden" id="settingsPanel">
+            <div class="form-group">
+                <label>工作时长（分钟）</label>
+                <input type="number" id="workTimeInput" value="25" min="1" max="90">
+            </div>
+            <div class="form-group">
+                <label>休息时长（分钟）</label>
+                <input type="number" id="restTimeInput" value="10" min="1" max="60">
+            </div>
+            <div class="form-group">
+                <label>循环轮数（1-8）</label>
+                <input type="number" id="roundsInput" value="4" min="1" max="8">
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="vibrateToggle" checked>
+                <label for="vibrateToggle" style="margin:0;">开启震动提醒（手机支持）</label>
+            </div>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="btn-group">
+            <button class="btn-start" id="startBtn">开始</button>
+            <button class="btn-pause hidden" id="pauseBtn">暂停</button>
+            <button class="btn-reset" id="resetBtn">重置</button>
+        </div>
+    </div>
+
+    <script>
+        // 🔧 默认配置（会被 localStorage 覆盖）
+        const DEFAULT_CONFIG = {
+            workMinutes: 25,
+            restMinutes: 10,
+            totalRounds: 4,
+            enableVibrate: true
+        };
+
+        // 🧠 状态变量
+        let currentRound = 0;
+        let isWorking = true;
+        let isRunning = false;
+
+        let stageDuration = 0;         // 当前阶段总秒数
+        let startTime = 0;              // 开始时间戳
+        let elapsedWhenPaused = 0;      // 暂停时累计的已过时间（秒）
+
+        // 🖼️ DOM 元素
+        const timeText = document.getElementById('timeText');
+        const statusDom = document.getElementById('status');
+        const roundDom = document.getElementById('round');
+        const progressFill = document.getElementById('progressFill');
+
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const toggleSettings = document.getElementById('toggleSettings');
+        const settingsPanel = document.getElementById('settingsPanel');
+
+        const workTimeInput = document.getElementById('workTimeInput');
+        const restTimeInput = document.getElementById('restTimeInput');
+        const roundsInput = document.getElementById('roundsInput');
+        const vibrateToggle = document.getElementById('vibrateToggle');
+
+        // 💾 存储键
+        const STORAGE_KEY_STATE = 'tomato_clock_state_v9';
+        const STORAGE_KEY_CONFIG = 'tomato_clock_config_v9';
+
+        // --- 工具函数 ---
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify({
+                    currentRound, isWorking, isRunning, stageDuration,
+                    startTime, elapsedWhenPaused
+                }));
+            } catch (e) { console.warn('状态保存失败', e); }
+        }
+
+        function loadState() {
+            const dataStr = localStorage.getItem(STORAGE_KEY_STATE);
+            if (!dataStr) return false;
+
+            try {
+                const data = JSON.parse(dataStr);
+                currentRound = data.currentRound;
+                isWorking = data.isWorking;
+                isRunning = data.isRunning;
+                stageDuration = data.stageDuration;
+                startTime = data.startTime;
+                elapsedWhenPaused = data.elapsedWhenPaused;
+                return true;
+            } catch (e) { return false; }
+        }
+
+        function saveConfig(config) {
+            try {
+                localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(config));
+            } catch (e) { }
+        }
+
+        function loadConfig() {
+            const dataStr = localStorage.getItem(STORAGE_KEY_CONFIG);
+            if (!dataStr) return { ...DEFAULT_CONFIG };
+
+            try {
+                return { ...DEFAULT_CONFIG, ...JSON.parse(dataStr) };
+            } catch (e) {
+                return { ...DEFAULT_CONFIG };
+            }
+        }
+
+        // 当前配置
+        let config = loadConfig();
+
+        // 同步配置到界面
+        function syncConfigToUI() {
+            workTimeInput.value = config.workMinutes;
+            restTimeInput.value = config.restMinutes;
+            roundsInput.value = config.totalRounds;
+            vibrateToggle.checked = config.enableVibrate;
+        }
+
+        // 保存并应用新配置
+        function applyConfig() {
+            config.workMinutes = Math.max(1, parseInt(workTimeInput.value) || 25);
+            config.restMinutes = Math.max(1, parseInt(restTimeInput.value) || 10);
+            config.totalRounds = Math.max(1, Math.min(8, parseInt(roundsInput.value) || 4));
+            config.enableVibrate = vibrateToggle.checked;
+
+            saveConfig(config);
+
+            // 如果未运行，更新 stageDuration
+            if (!isRunning) {
+                stageDuration = (isWorking ? config.workMinutes : config.restMinutes) * 60;
+                updateUI();
+            }
+        }
+
+        // 发送通知
+        function sendNotification(title, body) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, {
+                    body,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23e74c3c"/><text x="50" y="60" font-size="40" text-anchor="middle" fill="white">🍅</text></svg>'
+                });
+            }
+        }
+
+        // 震动提醒
+        function vibrate(duration = 500) {
+            if (config.enableVibrate && 'vibrate' in navigator) {
+                navigator.vibrate(duration);
+            }
+        }
+
+        // 请求权限
+        function requestPermissions() {
+            if ("Notification" in window && Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+        }
+
+        // 更新 UI
+        function updateUI() {
+            let totalElapsed = elapsedWhenPaused;
+            if (isRunning && startTime > 0) {
+                totalElapsed += Math.floor((Date.now() - startTime) / 1000);
+            }
+
+            let remainTime = Math.max(0, stageDuration - totalElapsed);
+            const min = String(Math.floor(remainTime / 60)).padStart(2, '0');
+            const sec = String(remainTime % 60).padStart(2, '0');
+            timeText.innerText = `${min}:${sec}`;
+
+            const progress = 1 - (remainTime / stageDuration);
+            const angle = 360 * progress;
+            progressFill.style.background = `conic-gradient(#e74c3c ${angle}deg, #f8f9fa ${angle}deg)`;
+
+            statusDom.innerText = isRunning
+                ? (isWorking ? '专注中...' : '休息中...')
+                : (isWorking ? '就绪 - 工作模式' : '就绪 - 休息模式');
+            roundDom.innerText = `当前轮次：${currentRound}/${config.totalRounds}`;
+
+            startBtn.classList.toggle('hidden', isRunning);
+            pauseBtn.classList.toggle('hidden', !isRunning);
+        }
+
+        // 开始
+        function startTimer() {
+            requestPermissions();
+            applyConfig(); // 应用最新设置
+
+            if (isRunning) return;
+
+            isRunning = true;
+            startTime = Date.now();
+
+            saveState();
+            updateUI();
+
+            function loop() {
+                if (!isRunning) return;
+                updateUI();
+
+                const passed = Math.floor((Date.now() - startTime) / 1000);
+                if (passed + elapsedWhenPaused >= stageDuration) {
+                    isRunning = false;
+                    vibrate(800); // 震动提醒！
+
+                    if (isWorking) {
+                        isWorking = false;
+                        stageDuration = config.restMinutes * 60;
+                        elapsedWhenPaused = 0;
+                        sendNotification('🎉 休息时间到！', '放松一下吧～');
+                    } else {
+                        currentRound++;
+                        isWorking = true;
+                        stageDuration = config.workMinutes * 60;
+                        elapsedWhenPaused = 0;
+
+                        if (currentRound > config.totalRounds) {
+                            sendNotification('🏆 全部完成！', '你真棒！');
+                            reset();
+                            return;
+                        }
+                        sendNotification(`🚀 第 ${currentRound} 轮开始`, '继续加油！');
+                    }
+
+                    saveState();
+                    updateUI();
+
+                    setTimeout(() => {
+                        if (!isRunning) startTimer();
+                    }, 800);
+                } else {
+                    requestAnimationFrame(loop);
+                }
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        // 暂停
+        function pauseTimer() {
+            if (!isRunning) return;
+
+            isRunning = false;
+            const nowElapsed = Math.floor((Date.now() - startTime) / 1000);
+            elapsedWhenPaused += nowElapsed;
+
+            saveState();
+            updateUI();
+
+            sendNotification('⏸️ 暂停', '任务已暂停');
+            vibrate(300);
+        }
+
+        // 重置
+        function reset() {
+            isRunning = false;
+            currentRound = 0;
+            isWorking = true;
+            stageDuration = config.workMinutes * 60;
+            startTime = 0;
+            elapsedWhenPaused = 0;
+
+            saveState();
+            updateUI();
+            sendNotification('↩️ 重置', '已回到初始状态');
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+
+        // --- 事件绑定 ---
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', reset);
+
+        toggleSettings.addEventListener('click', () => {
+            const isHidden = settingsPanel.classList.contains('hidden');
+            settingsPanel.classList.toggle('hidden', !isHidden);
+            toggleSettings.innerText = isHidden ? '❌ 收起设置' : '⚙️ 修改设置';
+        });
+
+        // 监听输入框变化
+        [workTimeInput, restTimeInput, roundsInput, vibrateToggle].forEach(el => {
+            el.addEventListener('change', applyConfig);
+        });
+
+        // 页面可见性
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                loadAll();
+            }
+        });
+
+        // 初始化
+        function loadAll() {
+            config = loadConfig();
+            syncConfigToUI();
+
+            const hasLoaded = loadState();
+            if (!hasLoaded) {
+                // 初始状态
+                stageDuration = config.workMinutes * 60;
+            }
+
+            updateUI();
+        }
+
+        loadAll();
+    </script>
+</body>
+
 </html>
