@@ -1,0 +1,23 @@
+{
+  "name": "番茄钟 · 专注每一分",
+  "short_name": "番茄钟",
+  "description": "一个极简高效的番茄工作法计时器",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#e74c3c",
+  "theme_color": "#e74c3c",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
